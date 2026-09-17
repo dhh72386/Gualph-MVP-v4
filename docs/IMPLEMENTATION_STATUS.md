@@ -1,16 +1,22 @@
 # Gualph v1.0 Implementation Status
 
+## Milestone 0 passed 2026-09-17
+
+Milestone 0 passed its exit criteria on commit `47e1600` in GitHub Actions run [35266800031](https://github.com/dhh72386/Gualph-MVP-v4/actions/runs/35266800031). The clean PostgreSQL 16.6 run applied all migrations and passed linting, strict type checking, 23 unit tests, six database integration tests, the production build, two built-server HTTP tests, and the production dependency audit. CI identified and verified remediation of one final defect: tenant-scoped missing reservations now return stable `404 NOT_FOUND` responses instead of generic `400 BAD_REQUEST` responses.
+
+Milestone 1 is no longer blocked by the foundation and security gate. Work should proceed according to `docs/Gualph-v1.0-Roadmap.md` without pulling later-milestone scope forward.
+
 ## Milestone 0 remediation update 2026-09-17
 
 The remaining code-side release-review actions are implemented. Reservation move and cancellation now use the shared serializable transaction service in `lib/services/reservation-lifecycle.ts`. The PostgreSQL suite contains six tests, including simultaneous reservation moves and move-versus-cancellation consistency. A built-server HTTP suite covers unauthenticated API rejection and authenticated cross-course reservation mutation. CI runs the HTTP suite after the production build against its PostgreSQL 16.6 service.
 
-Local verification passes frozen installation, Prisma generation and validation, linting, strict type checking, 21 unit tests, integration compilation, production build, and production dependency audit. The unauthenticated HTTP assertion also passes against the production server. A verified PostgreSQL 16.14 runtime could not initialize because this sandbox denies required System V shared memory; therefore clean migration execution, all six database tests, and the database-backed cross-course HTTP assertion remain unverified. Milestone 0 remains failed and Milestone 1 remains blocked pending a successful CI or external PostgreSQL run.
+At the time of this remediation update, local verification passed frozen installation, Prisma generation and validation, linting, strict type checking, 21 unit tests, integration compilation, production build, and production dependency audit. The local sandbox could not initialize PostgreSQL. This limitation was subsequently closed by the successful PostgreSQL CI evidence recorded in the Milestone 0 pass section above.
 
 ## Step 4 independent release review
 
 The independent release review is recorded in `docs/MILESTONE_0_RELEASE_REVIEW.md`. It fixed JWT validation, startup environment validation, origin enforcement, transaction-conflict mapping, and reservation lifecycle concurrency defects. Static verification, 21 unit tests, strict type checking, linting, production build, frozen installation, and production dependency audit pass.
 
-Milestone 0 remains failed because PostgreSQL is unavailable on this host. Clean migration execution and database-backed authentication, tenant isolation, capacity, and concurrent booking tests could not be verified. Milestone 1 remains blocked until the release-review blockers are closed.
+At the time of the Step 4 review, Milestone 0 remained failed because PostgreSQL was unavailable on the local host. The later PostgreSQL CI run closed those verification blockers; the current decision is recorded at the top of this document.
 
 ## Milestone 0 implementation update 2026-09-17
 
@@ -25,7 +31,7 @@ Step 3 implemented the Milestone 0 security and data-integrity foundation in rev
 - Added environment and authorization unit tests plus PostgreSQL integration tests for tenant scoping, concurrent booking, and database constraints.
 - Added a pinned PostgreSQL Compose service, database health endpoint, GitHub Actions CI, security headers, audit coverage for login, pricing, and exports, and an operations/backup/recovery runbook.
 
-Local static verification results are recorded below after the final Step 3 run. Fresh migration and integration proof require PostgreSQL. Docker is not installed on the current host, so those checks are delegated to the committed CI PostgreSQL service and remain unverified locally. Milestone 0 must not be marked complete until that CI job passes against a clean database.
+The following results preserve the historical Step 3 state. Docker was unavailable locally, so migration and integration proof was delegated to CI. That proof was later obtained in the successful run recorded at the top of this document.
 
 Final Step 3 verification:
 
