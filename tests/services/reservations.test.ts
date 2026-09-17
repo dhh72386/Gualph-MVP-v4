@@ -41,6 +41,13 @@ test('assertTeeTimeCanBeBooked rejects oversized parties', () => {
   }, 3), /capacity/);
 });
 
+test('assertTeeTimeCanBeBooked returns a stable not-found error for missing inventory', () => {
+  assert.throws(
+    () => assertTeeTimeCanBeBooked(null, 2),
+    (error: unknown) => error instanceof RequestError && error.status === 404 && error.code === 'NOT_FOUND',
+  );
+});
+
 test('calculateReservationTotal uses green fee and cart fee', () => {
   assert.equal(calculateReservationTotal({ greenFeeCents: 4500, cartFeeCents: 1800 }, 4), 25200);
 });
@@ -54,4 +61,13 @@ test('assertReservationCanBeCancelled only permits booked reservations', () => {
 test('assertReservationCanMove only permits booked reservations', () => {
   assert.doesNotThrow(() => assertReservationCanMove({ status: 'BOOKED', teeTime: { id: 'tee-time-1' } }));
   assert.throws(() => assertReservationCanMove({ status: 'CANCELLED', teeTime: { id: 'tee-time-1' } }), /Only booked/);
+});
+
+test('reservation lifecycle guards return stable not-found errors', () => {
+  for (const operation of [assertReservationCanMove, assertReservationCanBeCancelled]) {
+    assert.throws(
+      () => operation(null),
+      (error: unknown) => error instanceof RequestError && error.status === 404 && error.code === 'NOT_FOUND',
+    );
+  }
 });
