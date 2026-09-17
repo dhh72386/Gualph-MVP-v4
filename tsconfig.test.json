@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": ".test-dist",
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": ["lib/env.ts", "lib/errors.ts", "lib/permissions.ts", "lib/security.ts", "lib/session.ts", "lib/services/pricing.ts", "lib/services/optimization.ts", "lib/services/csv.ts", "lib/services/reservations.ts", "tests/services/**/*.test.ts"]
+}

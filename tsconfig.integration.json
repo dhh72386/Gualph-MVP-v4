@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": ".test-integration",
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": ["tests/integration/**/*.test.ts"]
+}

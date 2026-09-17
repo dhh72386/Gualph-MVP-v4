@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  COURSE_ADMIN
+  STAFF
+}
+
+enum TeeTimeStatus {
+  AVAILABLE
+  RESERVED
+  BLOCKED
+}
+
+enum ReservationStatus {
+  BOOKED
+  CHECKED_IN
+  CANCELLED
+  NO_SHOW
+}
+
+enum PricingRuleType {
+  DEMAND
+  TIME_OF_DAY
+  DAY_OF_WEEK
+  OCCUPANCY
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  EXPORT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(COURSE_ADMIN)
+  isActive     Boolean  @default(true)
+  sessionVersion Int    @default(0)
+  courseId     String?
+  course       Course?  @relation(fields: [courseId], references: [id])
+  auditLogs    AuditLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@index([courseId, role])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  address     String
+  city        String
+  state       String
+  zip         String
+  phone       String?
+  email       String?
+  website     String?
+  holes       Int      @default(18)
+  timezone    String   @default("America/New_York")
+  amenities   String[] @default([])
+  users       User[]
+  teeTimes    TeeTime[]
+  players     Player[]
+  photos      CoursePhoto[]
+  operatingHours OperatingHour[]
+  pricingRules PricingRule[]
+  auditLogs   AuditLog[]
+  featureFlags FeatureFlag[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CoursePhoto {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  @@index([courseId, sortOrder])
+}
+
+model OperatingHour {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  dayOfWeek Int
+  opensAt   String
+  closesAt  String
+  isClosed  Boolean  @default(false)
+  @@unique([courseId, dayOfWeek])
+}
+
+model TeeTime {
+  id             String        @id @default(cuid())
+  courseId       String
+  course         Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  startTime      DateTime
+  playersAllowed Int           @default(4)
+  greenFeeCents  Int
+  cartFeeCents   Int           @default(0)
+  status         TeeTimeStatus @default(AVAILABLE)
+  notes          String?
+  reservation    Reservation?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  @@index([courseId, startTime])
+  @@index([courseId, status, startTime])
+  @@unique([courseId, startTime])
+}
+
+model Player {
+  id           String        @id @default(cuid())
+  courseId     String
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  reservations Reservation[]
+  handicap     Float?
+  notes        String?
+  loyaltyPoints Int     @default(0)
+  lastPlayedAt DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  @@index([courseId, lastName])
+  @@index([courseId, email])
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  teeTimeId       String            @unique
+  teeTime         TeeTime           @relation(fields: [teeTimeId], references: [id], onDelete: Cascade)
+  playerId        String
+  player          Player            @relation(fields: [playerId], references: [id])
+  partySize       Int
+  status          ReservationStatus @default(BOOKED)
+  totalCents      Int
+  confirmationCode String           @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  @@index([playerId, createdAt])
+  @@index([status, createdAt])
+}
+
+model PricingRule {
+  id             String          @id @default(cuid())
+  courseId       String
+  course         Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  name           String
+  type           PricingRuleType
+  adjustmentBps  Int
+  isActive       Boolean         @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  @@index([courseId, isActive])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  courseId  String?
+  course    Course?     @relation(fields: [courseId], references: [id])
+  actorId   String?
+  actor     User?       @relation(fields: [actorId], references: [id])
+  action    AuditAction
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  @@index([courseId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  courseId  String?
+  course    Course?  @relation(fields: [courseId], references: [id])
+  key       String
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([courseId, key])
+}
